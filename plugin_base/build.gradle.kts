@@ -6,14 +6,17 @@ plugins {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10")
     implementation("com.android.tools.build:gradle:8.1.3")
-    implementation("custom.android.plugin:baseBuild:latest.release")
+    api("custom.android.plugin:baseBuild:latest.release")
 }
 
-PublishInfo{
-    groupId = "entertech.android.plugin"
-    artifactId = "base"
-    version = "0.0.1"
-    pluginId="entertech.android.plugin.base"
+PublishInfo {
+    groupId = "cn.entertech.android"
+    artifactId = "plugin"
+    version = "0.0.2"
+    pluginId = "cn.entertech.android.plugin.base"
     implementationClass = "entertech.android.plugin.EnterTechGradlePlugin"
+    setPublishUrl("https://s01.oss.sonatype.org/content/repositories/releases/")
+    setPublishPassword("5k1Kj4x6We/bPKTS7Ni/6ZZwL2FGnTNCkgNFlhWzXz6D")
+    setPublishUserName("2nqgfmsz")
 }
 
