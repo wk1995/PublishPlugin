@@ -49,8 +49,8 @@ open class PublishInfo {
 
     var implementationClass = ""
 
-    var publishUrl: String = "https://s01.oss.sonatype.org/content/repositories/releases/"
+    var publishUrl: String = ""
 
-    var publishUserName: String = "6584HSEW"
-    var publishPassword: String = "LlR0Ry9u/czWJlvN8gxqGfpFWfpzLtXjMYhjsnTgjLOq"
+    var publishUserName: String = ""
+    var publishPassword: String = ""
 }
