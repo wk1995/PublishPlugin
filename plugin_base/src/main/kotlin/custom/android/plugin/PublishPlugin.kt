@@ -24,6 +24,10 @@ open class PublishPlugin : Plugin<Project> {
         private const val TAG = "PublishPlugin"
     }
 
+    private val properties by lazy {
+        Properties()// local.properties file in the root director
+    }
+
     private fun supportAppModule(container: PluginContainer): Boolean {
         return container.hasPlugin("com.android.application")
     }
@@ -107,12 +111,18 @@ open class PublishPlugin : Plugin<Project> {
         )
     }
 
+    private fun needLoadSources(): Boolean {
+        return true
+    }
+
     private fun publishing(
         project: Project,
         publishing: PublishingExtension,
         publishInfo: PublishInfo,
         softwareComponent: SoftwareComponent
     ) {
+        properties.load(project.rootProject.file("local.properties").inputStream())
+        PluginLogUtil.printlnDebugInScreen("properties: $properties")
         publishing.publications { publications ->
             publications.create(
                 MAVEN_PUBLICATION_NAME, MavenPublication::class.java
@@ -120,7 +130,7 @@ open class PublishPlugin : Plugin<Project> {
                 publication.groupId = publishInfo.groupId
                 publication.artifactId = publishInfo.artifactId
                 publication.version = publishInfo.version
-                if (publication.version.endsWith("-debug")) {
+                if (needLoadSources()) {
                     val taskName = "androidSourcesJar"
                     //获取build.gradle中的android节点
                     val androidSet = project.extensions.getByName("android") as LibraryExtension
@@ -138,10 +148,6 @@ open class PublishPlugin : Plugin<Project> {
                 publication.from(softwareComponent)
             }
         }
-
-        val properties = Properties()// local.properties file in the root director
-        properties.load(project.rootProject.file("local.properties").inputStream())
-        PluginLogUtil.printlnDebugInScreen("properties: $properties")
         var publishUrl = publishInfo.publishUrl
         if (publishUrl.isEmpty()) {
             publishUrl = properties.getProperty("publishUrl", "")
