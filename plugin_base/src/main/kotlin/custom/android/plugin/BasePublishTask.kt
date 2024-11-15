@@ -39,12 +39,14 @@ abstract class BasePublishTask : DefaultTask() {
         //2、把publisher上传到服务器端，做版本重复性校验
         checkStatus = checkPublishInfo(publishInfo)
         //如果前两步都校验通过了，checkStatus设置为true
-//        PluginLogUtil.printlnDebugInScreen("projectDir: ${project.projectDir.absolutePath}")
-//        PluginLogUtil.printlnDebugInScreen("rootDir: ${project.rootDir.absolutePath}")
-        val realTaskName =
-            project.projectDir.absolutePath
-                .removePrefix(project.rootDir.absolutePath)
-                .replace(File.separator, ":") + initPublishCommandLine()
+        val projectDirAbsolutePath = project.projectDir.absolutePath
+        val rootDirAbsolutePath = project.rootDir.absolutePath
+        PluginLogUtil.printlnDebugInScreen("project.name: ${project.name}")
+        PluginLogUtil.printlnDebugInScreen("projectDir: $projectDirAbsolutePath")
+        PluginLogUtil.printlnDebugInScreen("rootDir: $rootDirAbsolutePath")
+        val removeRootPath=projectDirAbsolutePath.removePrefix(rootDirAbsolutePath)
+        PluginLogUtil.printlnDebugInScreen("removeRootPath: $removeRootPath")
+        val realTaskName = ":${project.name}" + initPublishCommandLine()
 
         if (checkStatus) {
             val out = ByteArrayOutputStream()
@@ -68,8 +70,7 @@ abstract class BasePublishTask : DefaultTask() {
             project.exec { exec ->
                 exec.standardOutput = out
                 exec.setCommandLine(
-                    path,
-                    realTaskName
+                    path, realTaskName
                 )
             }
             val result = out.toString()
