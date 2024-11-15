@@ -1,6 +1,7 @@
 plugins {
     `kotlin-dsl`
     id("maven-publish")
+//    id("signing")
 }
 
 dependencies {
@@ -33,6 +34,15 @@ publishing {
             from(components["java"])
         }
     }
+ /*   signing {
+        useInMemoryPgpKeys(
+            findProperty("signing.keyId") as String?,
+            findProperty("signing.secretKeyRingFile") as String?,
+            findProperty("signing.password") as String?
+        )
+        sign(publishing.publications["customPlugin"])
+    }*/
+
     repositories {
         maven {
             //允许使用 http

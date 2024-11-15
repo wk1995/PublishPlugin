@@ -66,33 +66,13 @@ open class PublishInfoExtension() {
 
     var implementationClass = ""
 
-    private var publishUrl: String = ""
+    var publishUrl: String = ""
 
-    private var publishUserName: String = ""
-    private var publishPassword: String = ""
+    var publishUserName: String = ""
 
-    open fun getPublishUrl(): String {
-        return publishUrl
-    }
+    var publishPassword: String = ""
 
-    open fun getPublishUserName(): String {
-        return publishUserName
-    }
-
-    open fun getPublishPassword(): String {
-        return publishPassword
-    }
-
-    open fun setPublishUrl(publishUrl: String) {
-        this.publishUrl = publishUrl
-    }
-
-    open fun setPublishUserName(publishUserName: String) {
-        this.publishUserName = publishUserName
-    }
-
-    open fun setPublishPassword(publishPassword: String) {
-        this.publishPassword = publishPassword
-    }
-
+    var signingKeyId: String = ""
+    var signingSecretKey: String = ""
+    var signingPassword: String = ""
 }
