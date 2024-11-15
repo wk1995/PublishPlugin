@@ -1,6 +1,4 @@
-package custom.android.plugin
-
-import java.awt.Color
+package custom.android.plugin.log
 
 object PluginLogUtil {
     private const val DEFAULT_COLOR_ERROR = "\u001B[31m"
@@ -18,7 +16,7 @@ object PluginLogUtil {
     }
 
     fun printlnDebugInScreen(msg: String) {
-        printlnInScreen(msg, "")
+        printlnInScreen(msg, resetColor)
     }
 
 

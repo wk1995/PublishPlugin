@@ -2,6 +2,7 @@ package custom.android.plugin
 
 import com.android.build.gradle.LibraryExtension
 import custom.android.plugin.BasePublishTask.Companion.MAVEN_PUBLICATION_NAME
+import custom.android.plugin.log.PluginLogUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponent

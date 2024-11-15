@@ -1,5 +1,6 @@
 package custom.android.plugin
 
+import custom.android.plugin.log.PluginLogUtil
 import org.gradle.api.DefaultTask
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
