@@ -14,7 +14,7 @@ open class PublishLibraryRemoteTask : BasePublishTask() {
         ":publish${MAVEN_PUBLICATION_NAME}PublicationToMavenRepository"
 
 
-    override fun checkPublishInfo(publishInfo: PublishInfo): Boolean {
+    override fun checkPublishInfo(publishInfo: PublishInfoExtension): Boolean {
         val version = publishInfo.version
         if(version.endsWith("debug")){
             PluginLogUtil.printlnErrorInScreen("$publishInfo version end with debug")

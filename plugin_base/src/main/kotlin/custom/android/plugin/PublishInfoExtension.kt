@@ -1,6 +1,6 @@
 package custom.android.plugin
 
-open class PublishInfo {
+open class PublishInfoExtension {
 
 
     companion object {

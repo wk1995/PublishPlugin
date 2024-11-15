@@ -33,7 +33,7 @@ abstract class BasePublishTask : DefaultTask() {
     }
 
     protected fun executeTask() {
-        val publishInfo = project.extensions.getByType(PublishInfo::class.java)
+        val publishInfo = project.extensions.getByType(PublishInfoExtension::class.java)
 
         //1、对publisher配置的信息进行基础校验
         //2、把publisher上传到服务器端，做版本重复性校验
@@ -140,7 +140,7 @@ abstract class BasePublishTask : DefaultTask() {
     /**
      * 上报服务器进行版本检查,这里直接模拟返回成功
      * */
-    protected open fun checkPublishInfo(publishInfo: PublishInfo): Boolean {
+    protected open fun checkPublishInfo(publishInfo: PublishInfoExtension): Boolean {
         return true
     }
 
