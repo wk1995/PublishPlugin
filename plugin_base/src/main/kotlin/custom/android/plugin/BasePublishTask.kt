@@ -1,5 +1,6 @@
 package custom.android.plugin
 
+import custom.android.plugin.base.ProjectHelper
 import custom.android.plugin.log.PluginLogUtil
 import org.gradle.api.DefaultTask
 import org.gradle.api.publish.PublishingExtension
@@ -33,7 +34,7 @@ abstract class BasePublishTask : DefaultTask() {
         executeTask()
     }
 
-    protected fun executeTask() {
+    private fun executeTask() {
         val publishInfo = project.extensions.getByType(PublishInfoExtension::class.java)
 
         //1、对publisher配置的信息进行基础校验
@@ -68,9 +69,9 @@ abstract class BasePublishTask : DefaultTask() {
             val path = "${project.rootDir}${File.separator}${gradlewFileName}"
             PluginLogUtil.printlnDebugInScreen("$TAG path: $path realTaskName: $realTaskName")
             //通过命令行的方式进行调用上传maven的task
-            project.exec { exec ->
-                exec.standardOutput = out
-                exec.setCommandLine(
+            project.exec {
+                standardOutput = out
+                setCommandLine(
                     path, realTaskName
                 )
             }
@@ -84,22 +85,22 @@ abstract class BasePublishTask : DefaultTask() {
                     var groupId = ""
                     var artifactId = ""
                     var version = ""
-                    publishing.publications { publications ->
+                    publishing.publications {
                         val mavenPublication =
-                            publications.getByName(MAVEN_PUBLICATION_NAME) as MavenPublication
+                            getByName(MAVEN_PUBLICATION_NAME) as MavenPublication
                         groupId = mavenPublication.groupId
                         artifactId = mavenPublication.artifactId
                         version = mavenPublication.version
 
                     }
-                    publishing.repositories { artifactRepositories ->
-                        artifactRepositories.maven {
+                    publishing.repositories {
+                        maven {
                             //url可能为null，虽然提示不会为null
-                            PluginLogUtil.printlnInfoInScreen("${it.name} url: ${it.url?.toString()}")
+                            PluginLogUtil.printlnInfoInScreen("$name url: $url")
                         }
                     }
                     publishing.repositories.maven {
-                        PluginLogUtil.printlnInfoInScreen(" ${it.name} url: ${it.url?.toString()}")
+                        PluginLogUtil.printlnInfoInScreen(" $name url: $url")
                     }
                     val fileNames = groupId.split(".")
                     val pathSb = StringBuilder()
@@ -108,17 +109,19 @@ abstract class BasePublishTask : DefaultTask() {
                         pathSb.append(it)
                         pathSb.append(File.separatorChar)
                     }
-//                    pathSb.append(artifactId)
-//                    pathSb.append(File.separatorChar)
+
                     PluginLogUtil.printlnInfoInScreen("构建成功")
                     PluginLogUtil.printlnInfoInScreen("仓库地址：  $pathSb")
                     PluginLogUtil.printlnInfoInScreen("===================================================================")
                     PluginLogUtil.printlnInfoInScreen("")
-                    PluginLogUtil.printlnInfoInScreen("implementation '$groupId:$artifactId:$version'")
-                    PluginLogUtil.printlnInfoInScreen("")
-                    PluginLogUtil.printlnInfoInScreen("==================================================================")
-                    PluginLogUtil.printlnInfoInScreen("")
-                    PluginLogUtil.printlnInfoInScreen("implementation (\"$groupId:$artifactId:$version\")")
+                    if (ProjectHelper.isLibrary(project.plugins)) {
+                        PluginLogUtil.printlnInfoInScreen("implementation (\"$groupId:$artifactId:$version\")")
+                    } else {
+                        PluginLogUtil.printlnInfoInScreen("classpath (\"$groupId:$artifactId:$version\")")
+                        PluginLogUtil.printlnInfoInScreen("")
+                        PluginLogUtil.printlnInfoInScreen("id(\"${publishInfo.pluginId}\")")
+                    }
+
                     PluginLogUtil.printlnInfoInScreen("")
                     PluginLogUtil.printlnInfoInScreen("==================================================================")
                     //提示成功信息
