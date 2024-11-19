@@ -40,7 +40,6 @@ open class PublishOperate {
             try {
                 val publishInfo = project.extensions.getByType(clazz)
                 val publishing = project.extensions.getByType(PublishingExtension::class.java)
-                val signing = project.extensions.getByType(SigningExtension::class.java)
                 components.forEach {
                     PluginLogUtil.printlnDebugInScreen("$TAG name: ${it.name}")
                     if (type == ModuleType.PLUGIN) {
@@ -55,13 +54,13 @@ open class PublishOperate {
                                     implementationClass = publishInfo.implementationClass
                                 }
                             }
-                            publishing(project, publishing, signing, publishInfo, it)
+                            publishing(project, publishing,  publishInfo, it)
                         }
                     }
                     if (type == ModuleType.LIBRARY) {
                         if (it.name == "release") {
                             //注册上传task
-                            publishing(project, publishing, signing, publishInfo, it)
+                            publishing(project, publishing, publishInfo, it)
                         }
                     }
                 }
@@ -91,20 +90,12 @@ open class PublishOperate {
     private fun <T : PublishInfoExtension> publishing(
         project: Project,
         publishing: PublishingExtension,
-        signing: SigningExtension,
         publishInfo: T,
         softwareComponent: SoftwareComponent
     ) {
         properties.load(project.rootProject.file("local.properties").inputStream())
         PluginLogUtil.printlnDebugInScreen("properties: $properties")
 
-        val keyId=publishInfo.signingKeyId
-        val signingSecretKey = publishInfo.signingSecretKey
-        val signingPassword = publishInfo.signingPassword
-        if (keyId.isNotEmpty() && signingPassword.isNotEmpty() && signingSecretKey.isNotEmpty()) {
-            signing.useInMemoryPgpKeys(keyId, signingPassword, signingSecretKey)
-            signing.sign(publishing.publications[MAVEN_PUBLICATION_NAME])
-        }
 
         publishing.publications {
             create(
@@ -131,6 +122,18 @@ open class PublishOperate {
                 from(softwareComponent)
             }
         }
+
+        val keyId=publishInfo.signingKeyId
+        val signingSecretKey = publishInfo.signingSecretKey
+        val signingPassword = publishInfo.signingPassword
+        if (keyId.isNotEmpty() && signingPassword.isNotEmpty() && signingSecretKey.isNotEmpty()) {
+            project.plugins.apply("signing")
+            val signing = project.extensions.getByType(SigningExtension::class.java)
+            signing.useInMemoryPgpKeys(keyId, signingPassword, signingSecretKey)
+            signing.sign(publishing.publications[MAVEN_PUBLICATION_NAME])
+        }
+
+
         var publishUrl = publishInfo.publishUrl
         if (publishUrl.isEmpty()) {
             publishUrl = properties.getProperty("publishUrl", "")
