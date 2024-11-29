@@ -30,7 +30,7 @@ publishing {
         create<MavenPublication>("customPlugin") {
             groupId = "cn.entertech.android"
             artifactId = "publish"
-            version = "1.0.6-local"
+            version = "1.1.0-local"
             from(components["java"])
         }
     }

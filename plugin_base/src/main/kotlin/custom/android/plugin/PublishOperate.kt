@@ -4,6 +4,9 @@ import com.android.build.gradle.LibraryExtension
 import custom.android.plugin.BasePublishTask.Companion.MAVEN_PUBLICATION_NAME
 import custom.android.plugin.base.ModuleType
 import custom.android.plugin.log.PluginLogUtil
+import custom.android.plugin.publish.BasePublish
+import custom.android.plugin.publish.app.fir.im.FirImPublishApp
+import custom.android.plugin.publish.library.MavenPublishLibrary
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponent
 import org.gradle.api.publish.PublishingExtension
@@ -28,19 +31,22 @@ open class PublishOperate {
 
     fun <T : PublishInfoExtension> configPublish(project: Project, type: Int, clazz: Class<T>) {
         // use Gradle Maven plugins
-        if (type == ModuleType.APP) {
-            PluginLogUtil.printlnDebugInScreen("$TAG is app")
-            return
-        }
-        project.plugins.apply(MavenPublishPlugin::class.java)
         project.extensions.create(
             PublishInfoExtension.EXTENSION_PUBLISH_INFO_NAME, clazz,
         )
+        var mBasePublish: BasePublish = DefaultPublish()
+        if (type == ModuleType.APP) {
+            PluginLogUtil.printlnDebugInScreen("$TAG is app")
+            mBasePublish = FirImPublishApp()
+            return
+        }
+        mBasePublish = MavenPublishLibrary()
+        project.plugins.apply(MavenPublishPlugin::class.java)
         project.afterEvaluate {
             try {
                 val publishInfo = project.extensions.getByType(clazz)
                 val publishing = project.extensions.getByType(PublishingExtension::class.java)
-                val signing = project.extensions.getByType(SigningExtension::class.java)
+
                 components.forEach {
                     PluginLogUtil.printlnDebugInScreen("$TAG name: ${it.name}")
                     if (type == ModuleType.PLUGIN) {
@@ -55,13 +61,13 @@ open class PublishOperate {
                                     implementationClass = publishInfo.implementationClass
                                 }
                             }
-                            publishing(project, publishing, signing, publishInfo, it)
+                            publishing(project, publishing, publishInfo, it)
                         }
                     }
                     if (type == ModuleType.LIBRARY) {
                         if (it.name == "release") {
                             //注册上传task
-                            publishing(project, publishing, signing, publishInfo, it)
+                            publishing(project, publishing, publishInfo, it)
                         }
                     }
                 }
@@ -78,12 +84,21 @@ open class PublishOperate {
             PluginLogUtil.printlnDebugInScreen("$TAG currProject.displayName $displayName")
             if (currProjectName == displayName) {
                 PluginLogUtil.printlnDebugInScreen("$TAG $currProjectName start register ")
-                project.tasks.register(
-                    PublishLibraryLocalTask.TAG, PublishLibraryLocalTask::class.java
-                )
-                project.tasks.register(
-                    PublishLibraryRemoteTask.TAG, PublishLibraryRemoteTask::class.java
-                )
+                try {
+                    project.tasks.register(
+                        PublishLibraryLocalTask.TAG,
+                        PublishLibraryLocalTask::class.java,
+                        mBasePublish
+                    )
+                    project.tasks.register(
+                        PublishLibraryRemoteTask.TAG,
+                        PublishLibraryRemoteTask::class.java,
+                        mBasePublish
+                    )
+                } catch (e: Exception) {
+                    PluginLogUtil.printlnErrorInScreen("$TAG register error ${e.message} ")
+                }
+
             }
         }
     }
@@ -91,17 +106,16 @@ open class PublishOperate {
     private fun <T : PublishInfoExtension> publishing(
         project: Project,
         publishing: PublishingExtension,
-        signing: SigningExtension,
         publishInfo: T,
         softwareComponent: SoftwareComponent
     ) {
         properties.load(project.rootProject.file("local.properties").inputStream())
         PluginLogUtil.printlnDebugInScreen("properties: $properties")
-
-        val keyId=publishInfo.signingKeyId
+        val keyId = publishInfo.signingKeyId
         val signingSecretKey = publishInfo.signingSecretKey
         val signingPassword = publishInfo.signingPassword
         if (keyId.isNotEmpty() && signingPassword.isNotEmpty() && signingSecretKey.isNotEmpty()) {
+            val signing = project.extensions.getByType(SigningExtension::class.java)
             signing.useInMemoryPgpKeys(keyId, signingPassword, signingSecretKey)
             signing.sign(publishing.publications[MAVEN_PUBLICATION_NAME])
         }

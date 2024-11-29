@@ -1,18 +1,14 @@
 package custom.android.plugin
 
-import custom.android.plugin.base.ProjectHelper
 import custom.android.plugin.log.PluginLogUtil
+import custom.android.plugin.publish.BasePublish
 import org.gradle.api.DefaultTask
-import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.lang.StringBuilder
+import javax.inject.Inject
 
-abstract class BasePublishTask : DefaultTask() {
-    //检验状态是否通过
-    private var checkStatus = false
+abstract class BasePublishTask @Inject constructor(@get:Input protected val publish: BasePublish) :
+    DefaultTask() {
 
     /**
      * 不能写成get/set
@@ -26,120 +22,16 @@ abstract class BasePublishTask : DefaultTask() {
 
     init {
         group = "customPlugin"
+        PluginLogUtil.printlnDebugInScreen("publish: $publish")
     }
 
 
     @TaskAction
     fun doTask() {
-        executeTask()
+        executeTask(project.extensions.getByType(PublishInfoExtension::class.java))
     }
 
-    private fun executeTask() {
-        val publishInfo = project.extensions.getByType(PublishInfoExtension::class.java)
-
-        //1、对publisher配置的信息进行基础校验
-        //2、把publisher上传到服务器端，做版本重复性校验
-        checkStatus = checkPublishInfo(publishInfo)
-        //如果前两步都校验通过了，checkStatus设置为true
-        val projectDirAbsolutePath = project.projectDir.absolutePath
-        val rootDirAbsolutePath = project.rootDir.absolutePath
-        PluginLogUtil.printlnDebugInScreen("project.name: ${project.name}")
-        PluginLogUtil.printlnDebugInScreen("projectDir: $projectDirAbsolutePath")
-        PluginLogUtil.printlnDebugInScreen("rootDir: $rootDirAbsolutePath")
-        val removeRootPath=projectDirAbsolutePath.removePrefix(rootDirAbsolutePath)
-        PluginLogUtil.printlnDebugInScreen("removeRootPath: $removeRootPath")
-        val realTaskName = ":${project.name}" + initPublishCommandLine()
-
-        if (checkStatus) {
-            val out = ByteArrayOutputStream()
-            val osName = System.getProperty("os.name")
-            PluginLogUtil.printlnInfoInScreen("current System is :$osName")
-            val gradlewFileName = if (osName.contains("Windows")) {
-                // Windows 系统
-                "gradlew.bat"
-            } else if (osName.contains("Mac")) {
-                // macOS 系统
-                "gradlew"
-            } else if (osName.contains("Linux")) {
-                // Linux 系统
-                "gradlew.bat"
-            } else {
-                ""
-            }
-            val path = "${project.rootDir}${File.separator}${gradlewFileName}"
-            PluginLogUtil.printlnDebugInScreen("$TAG path: $path realTaskName: $realTaskName")
-            //通过命令行的方式进行调用上传maven的task
-            project.exec {
-                standardOutput = out
-                setCommandLine(
-                    path, realTaskName
-                )
-            }
-            val result = out.toString()
-            PluginLogUtil.printlnDebugInScreen("result: $result")
-            if (result.contains("UP-TO-DATE")) {
-                //上传maven仓库成功，上报到服务器
-                val isSuccess = requestUploadVersion()
-                if (isSuccess) {
-                    val publishing = project.extensions.getByType(PublishingExtension::class.java)
-                    var groupId = ""
-                    var artifactId = ""
-                    var version = ""
-                    publishing.publications {
-                        val mavenPublication =
-                            getByName(MAVEN_PUBLICATION_NAME) as MavenPublication
-                        groupId = mavenPublication.groupId
-                        artifactId = mavenPublication.artifactId
-                        version = mavenPublication.version
-
-                    }
-                    publishing.repositories {
-                        maven {
-                            //url可能为null，虽然提示不会为null
-                            PluginLogUtil.printlnInfoInScreen("$name url: $url")
-                        }
-                    }
-                    publishing.repositories.maven {
-                        PluginLogUtil.printlnInfoInScreen(" $name url: $url")
-                    }
-                    val fileNames = groupId.split(".")
-                    val pathSb = StringBuilder()
-                    pathSb.append(getPublishingExtensionRepositoriesPath(publishing))
-                    fileNames.forEach {
-                        pathSb.append(it)
-                        pathSb.append(File.separatorChar)
-                    }
-
-                    PluginLogUtil.printlnInfoInScreen("构建成功")
-                    PluginLogUtil.printlnInfoInScreen("仓库地址：  $pathSb")
-                    PluginLogUtil.printlnInfoInScreen("===================================================================")
-                    PluginLogUtil.printlnInfoInScreen("")
-                    if (ProjectHelper.isLibrary(project.plugins)) {
-                        PluginLogUtil.printlnInfoInScreen("implementation (\"$groupId:$artifactId:$version\")")
-                    } else {
-                        PluginLogUtil.printlnInfoInScreen("classpath (\"$groupId:$artifactId:$version\")")
-                        PluginLogUtil.printlnInfoInScreen("")
-                        PluginLogUtil.printlnInfoInScreen("id(\"${publishInfo.pluginId}\")")
-                    }
-
-                    PluginLogUtil.printlnInfoInScreen("")
-                    PluginLogUtil.printlnInfoInScreen("==================================================================")
-                    //提示成功信息
-                } else {
-                    //提示错误信息
-                }
-            } else {
-                PluginLogUtil.printlnErrorInScreen("===============================下面是执行指令的输出结果===============================")
-                PluginLogUtil.printlnErrorInScreen("")
-                PluginLogUtil.printlnErrorInScreen(result)
-                PluginLogUtil.printlnErrorInScreen("")
-                PluginLogUtil.printlnErrorInScreen("==================================================================================")
-                throw Exception("上传Maven仓库失败，请检查配置！")
-            }
-            PluginLogUtil.printlnDebugInScreen("$TAG executeTask finish ")
-        }
-    }
-
+    abstract fun executeTask(publishInfo: PublishInfoExtension)
 
     /**
      * 上报服务器进行版本检查,这里直接模拟返回成功
@@ -147,8 +39,6 @@ abstract class BasePublishTask : DefaultTask() {
     protected open fun checkPublishInfo(publishInfo: PublishInfoExtension): Boolean {
         return true
     }
-
-    abstract fun getPublishingExtensionRepositoriesPath(publishing: PublishingExtension): String
 
     /**
      * 上报服务器进行版本更新操作,这里直接模拟返回成功
