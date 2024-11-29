@@ -46,7 +46,6 @@ open class PublishOperate {
             try {
                 val publishInfo = project.extensions.getByType(clazz)
                 val publishing = project.extensions.getByType(PublishingExtension::class.java)
-
                 components.forEach {
                     PluginLogUtil.printlnDebugInScreen("$TAG name: ${it.name}")
                     if (type == ModuleType.PLUGIN) {
