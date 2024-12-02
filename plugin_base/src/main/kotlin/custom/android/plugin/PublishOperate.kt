@@ -38,6 +38,29 @@ open class PublishOperate {
         if (type == ModuleType.APP) {
             PluginLogUtil.printlnDebugInScreen("$TAG is app")
             mBasePublish = FirImPublishApp()
+            val currProjectName = project.displayName
+            PluginLogUtil.printlnDebugInScreen("$TAG currProjectName $currProjectName")
+            project.gradle.afterProject {
+                PluginLogUtil.printlnDebugInScreen("$TAG currProject.displayName $displayName")
+                if (currProjectName == displayName) {
+                    PluginLogUtil.printlnDebugInScreen("$TAG $currProjectName start register ")
+                    try {
+                        project.tasks.register(
+                            PublishLibraryLocalTask.TAG,
+                            PublishLibraryLocalTask::class.java,
+                            mBasePublish
+                        )
+                        project.tasks.register(
+                            PublishLibraryRemoteTask.TAG,
+                            PublishLibraryRemoteTask::class.java,
+                            mBasePublish
+                        )
+                    } catch (e: Exception) {
+                        PluginLogUtil.printlnErrorInScreen("$TAG register error ${e.message} ")
+                    }
+
+                }
+            }
             return
         }
         mBasePublish = MavenPublishLibrary()
@@ -101,6 +124,9 @@ open class PublishOperate {
             }
         }
     }
+
+
+
 
     private fun <T : PublishInfoExtension> publishing(
         project: Project,
