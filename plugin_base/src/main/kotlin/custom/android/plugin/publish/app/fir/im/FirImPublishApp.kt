@@ -50,7 +50,7 @@ open class FirImPublishApp : BasePublishApp() {
         println("Flavor: ${variant.flavorName}")
         variant.outputs.forEach {
             val apkFile=it.outputFile
-            println("Output APK: file://${apkFile.parent}")
+            println("Output APK: ${apkFile.parent}")
         }
     }
 
