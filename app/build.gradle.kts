@@ -18,6 +18,34 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions.add("device")
+    flavorDimensions.add("type")
+
+    productFlavors {
+        create("phone") {
+            dimension = "device"
+            applicationIdSuffix = ".phone"
+            versionNameSuffix = "-phone"
+        }
+        create("free") {
+            dimension = "type"
+            applicationIdSuffix = ".free"
+            versionNameSuffix = "-free"
+        }
+
+        create("vip") {
+            dimension = "type"
+            applicationIdSuffix = ".vip"
+            versionNameSuffix = "-vip"
+        }
+        create("paid") {
+            dimension = "device"
+            applicationIdSuffix = ".paid"
+            versionNameSuffix = "-paid"
+        }
+    }
+
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -26,6 +54,22 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        create("other") {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
