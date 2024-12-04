@@ -3,15 +3,10 @@ package custom.android.plugin.publish.app.fir.im
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApplicationVariant
 import custom.android.plugin.PublishInfoExtension
-import custom.android.plugin.log.PluginLogUtil
-import custom.android.plugin.publish.app.BasePublishApp
-import custom.android.plugin.publish.library.MavenPublishLibrary
-import custom.android.plugin.publish.library.MavenPublishLibrary.Companion
+import custom.android.plugin.publish.BaseLocalPublish
 import org.gradle.api.Project
-import java.io.ByteArrayOutputStream
-import java.io.File
 
-open class FirImPublishApp : BasePublishApp() {
+open class FirImPublishLocalApp : BaseLocalPublish() {
 
     companion object {
         private const val TAG = "FirImPublishApp"
@@ -19,6 +14,10 @@ open class FirImPublishApp : BasePublishApp() {
 
     override fun queryVersion(): String? {
         return ""
+    }
+
+    override fun getPublishTaskName(): String {
+        return "publishLocalApp"
     }
 
     override fun publishLocal(project: Project, publishInfo: PublishInfoExtension) {
@@ -52,19 +51,6 @@ open class FirImPublishApp : BasePublishApp() {
             val apkFile=it.outputFile
             println("Output APK: file://${apkFile.parent}")
         }
-    }
-
-    override fun publishRemote(project: Project, publishInfo: PublishInfoExtension) {
-        val out = ByteArrayOutputStream()
-//        val path = "${project.rootDir}${File.separator}${gradlewFileName()}"
-//        PluginLogUtil.printlnDebugInScreen("$TAG path: $path realTaskName: $realTaskName")
-//        //通过命令行的方式进行调用上传maven的task
-//        project.exec {
-//            standardOutput = out
-//            setCommandLine(
-//                path, realTaskName
-//            )
-//        }
     }
 
     override fun updateInfo() {
