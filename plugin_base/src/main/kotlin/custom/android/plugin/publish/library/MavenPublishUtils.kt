@@ -1,41 +1,30 @@
 package custom.android.plugin.publish.library
 
-import custom.android.plugin.BasePublishTask
 import custom.android.plugin.PublishInfoExtension
 import custom.android.plugin.base.ProjectHelper
 import custom.android.plugin.log.PluginLogUtil
+import custom.android.plugin.publish.BasePublish
+import custom.android.plugin.publish.library.MavenPublishRemoteLibrary.Companion.MAVEN_PUBLICATION_NAME
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-open class MavenPublishLibrary : BasePublishLibrary() {
+object MavenPublishUtils {
 
-    companion object {
-        private const val TAG = "MavenPublishLibrary"
-        const val MAVEN_PUBLICATION_NAME = "EnterPublish"
-    }
+    private const val TAG = "MavenPublishUtils"
 
-    override fun queryVersion(): String? {
-        return null
-    }
-
-    private fun getLocalRepositoriesUrl(publishing: PublishingExtension) =
-        publishing.repositories.mavenLocal().url.toString()
-
-    private fun getRemoteRepositoriesUrl(publishing: PublishingExtension) =
-        publishing.repositories.mavenLocal().url.toString()
-
-    private fun mavenPublish(
+    fun mavenPublish(
         project: Project,
+        publish: BasePublish,
         publishInfo: PublishInfoExtension,
         taskName: String,
         getRepositoriesUrl: (PublishingExtension) -> String
     ) {
         val realTaskName = ":${project.name}$taskName"
         val out = ByteArrayOutputStream()
-        val path = "${project.rootDir}${File.separator}${gradlewFileName()}"
+        val path = "${project.rootDir}${File.separator}${publish.gradlewFileName()}"
         PluginLogUtil.printlnDebugInScreen("$TAG path: $path realTaskName: $realTaskName")
         //通过命令行的方式进行调用上传maven的task
         project.exec {
@@ -88,33 +77,5 @@ open class MavenPublishLibrary : BasePublishLibrary() {
             throw Exception("上传Maven仓库失败，请检查配置！")
         }
         PluginLogUtil.printlnDebugInScreen("$TAG executeTask finish ")
-    }
-
-    override fun publishLocal(project: Project, publishInfo: PublishInfoExtension) {
-        mavenPublish(project, publishInfo, ":publishToMavenLocal") {
-            getLocalRepositoriesUrl(it)
-        }
-    }
-
-    override fun publishRemote(project: Project, publishInfo: PublishInfoExtension) {
-        mavenPublish(
-            project,
-            publishInfo,
-            ":publish${BasePublishTask.MAVEN_PUBLICATION_NAME}PublicationToMavenRepository"
-        ) {
-            getRemoteRepositoriesUrl(it)
-        }
-    }
-
-    override fun updateInfo() {
-
-    }
-
-    override fun getList() {
-
-    }
-
-    override fun getInfo() {
-
     }
 }

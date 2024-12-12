@@ -1,17 +1,12 @@
 package custom.android.plugin.publish.app.fir.im
 
-import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApplicationVariant
 import custom.android.plugin.PublishInfoExtension
-import custom.android.plugin.log.PluginLogUtil
-import custom.android.plugin.publish.app.BasePublishApp
-import custom.android.plugin.publish.library.MavenPublishLibrary
-import custom.android.plugin.publish.library.MavenPublishLibrary.Companion
+import custom.android.plugin.publish.BaseRemotePublish
 import org.gradle.api.Project
 import java.io.ByteArrayOutputStream
-import java.io.File
 
-open class FirImPublishApp : BasePublishApp() {
+open class FirImPublishRemoteApp : BaseRemotePublish() {
 
     companion object {
         private const val TAG = "FirImPublishApp"
@@ -21,27 +16,9 @@ open class FirImPublishApp : BasePublishApp() {
         return ""
     }
 
-    override fun publishLocal(project: Project, publishInfo: PublishInfoExtension) {
-        val android = project.extensions.findByName("android") as? AppExtension
-        // 遍历所有变种
-        android?.applicationVariants?.all{
-            variant ->
-            handleVariant(project, variant)
-            true
-        }
-
-       /* val realTaskName = ":"
-        val out = ByteArrayOutputStream()
-        val path = "${project.rootDir}${File.separator}${gradlewFileName()}"
-        PluginLogUtil.printlnDebugInScreen("$TAG path: $path realTaskName: $realTaskName")
-        project.exec {
-            standardOutput = out
-            setCommandLine(
-                path, realTaskName
-            )
-        }*/
+    override fun getPublishTaskName(): String {
+        return "publishRemoteApp"
     }
-
 
     private fun handleVariant(project: Project, variant: ApplicationVariant) {
         // 获取变种的相关信息
@@ -50,7 +27,7 @@ open class FirImPublishApp : BasePublishApp() {
         println("Flavor: ${variant.flavorName}")
         variant.outputs.forEach {
             val apkFile=it.outputFile
-            println("Output APK: ${apkFile.parent}")
+            println("Output APK: file://${apkFile.parent}")
         }
     }
 

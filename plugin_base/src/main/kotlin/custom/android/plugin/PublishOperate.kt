@@ -1,12 +1,16 @@
 package custom.android.plugin
 
 import com.android.build.gradle.LibraryExtension
-import custom.android.plugin.BasePublishTask.Companion.MAVEN_PUBLICATION_NAME
+import custom.android.plugin.PublishTask.Companion.MAVEN_PUBLICATION_NAME
 import custom.android.plugin.base.ModuleType
 import custom.android.plugin.log.PluginLogUtil
 import custom.android.plugin.publish.BasePublish
-import custom.android.plugin.publish.app.fir.im.FirImPublishApp
-import custom.android.plugin.publish.library.MavenPublishLibrary
+import custom.android.plugin.publish.app.fir.im.FirImPublishLocalApp
+import custom.android.plugin.publish.app.fir.im.FirImPublishRemoteApp
+import custom.android.plugin.publish.library.MavenPublishLocalLibrary
+import custom.android.plugin.publish.library.MavenPublishRemoteLibrary
+import custom.android.plugin.publish.plugin.MavenPublishLocalPlugin
+import custom.android.plugin.publish.plugin.MavenPublishRemotePlugin
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponent
 import org.gradle.api.publish.PublishingExtension
@@ -34,36 +38,31 @@ open class PublishOperate {
         project.extensions.create(
             PublishInfoExtension.EXTENSION_PUBLISH_INFO_NAME, clazz,
         )
-        var mBasePublish: BasePublish = DefaultPublish()
         if (type == ModuleType.APP) {
             PluginLogUtil.printlnDebugInScreen("$TAG is app")
-            mBasePublish = FirImPublishApp()
             val currProjectName = project.displayName
             PluginLogUtil.printlnDebugInScreen("$TAG currProjectName $currProjectName")
             project.gradle.afterProject {
                 PluginLogUtil.printlnDebugInScreen("$TAG currProject.displayName $displayName")
                 if (currProjectName == displayName) {
                     PluginLogUtil.printlnDebugInScreen("$TAG $currProjectName start register ")
-                    try {
-                        project.tasks.register(
-                            PublishLibraryLocalTask.TAG,
-                            PublishLibraryLocalTask::class.java,
-                            mBasePublish
-                        )
-                        project.tasks.register(
-                            PublishLibraryRemoteTask.TAG,
-                            PublishLibraryRemoteTask::class.java,
-                            mBasePublish
-                        )
-                    } catch (e: Exception) {
-                        PluginLogUtil.printlnErrorInScreen("$TAG register error ${e.message} ")
+                    listOf(
+                        FirImPublishLocalApp(), FirImPublishRemoteApp()
+                    ).forEach {
+                        val publishTaskName = it.getPublishTaskName()
+                        try {
+                            project.tasks.register(
+                                publishTaskName, PublishTask::class.java, it
+                            )
+                        } catch (e: Exception) {
+                            PluginLogUtil.printlnErrorInScreen("$TAG register $publishTaskName error ${e.message} ")
+                        }
                     }
 
                 }
             }
             return
         }
-        mBasePublish = MavenPublishLibrary()
         project.plugins.apply(MavenPublishPlugin::class.java)
         project.afterEvaluate {
             try {
@@ -105,27 +104,43 @@ open class PublishOperate {
         project.gradle.afterProject {
             PluginLogUtil.printlnDebugInScreen("$TAG currProject.displayName $displayName")
             if (currProjectName == displayName) {
-                PluginLogUtil.printlnDebugInScreen("$TAG $currProjectName start register ")
-                try {
-                    project.tasks.register(
-                        PublishLibraryLocalTask.TAG,
-                        PublishLibraryLocalTask::class.java,
-                        mBasePublish
-                    )
-                    project.tasks.register(
-                        PublishLibraryRemoteTask.TAG,
-                        PublishLibraryRemoteTask::class.java,
-                        mBasePublish
-                    )
-                } catch (e: Exception) {
-                    PluginLogUtil.printlnErrorInScreen("$TAG register error ${e.message} ")
+                PluginLogUtil.printlnDebugInScreen("$TAG $currProjectName 开始注册task ")
+                //构造不同的basePublish，taskName也需要basePublish提供，basePublish需要区分local&remote，各种变种
+                when (type) {
+                    ModuleType.PLUGIN -> {
+                        listOf(
+                            MavenPublishLocalPlugin(), MavenPublishRemotePlugin()
+                        ).forEach {
+                            val publishTaskName = it.getPublishTaskName()
+                            try {
+                                project.tasks.register(
+                                    publishTaskName, PublishTask::class.java, it
+                                )
+                            } catch (e: Exception) {
+                                PluginLogUtil.printlnErrorInScreen("$TAG register $publishTaskName error ${e.message} ")
+                            }
+                        }
+                    }
+
+                    ModuleType.LIBRARY -> {
+                        listOf(
+                            MavenPublishLocalLibrary(), MavenPublishRemoteLibrary()
+                        ).forEach {
+                            val publishTaskName = it.getPublishTaskName()
+                            try {
+                                project.tasks.register(
+                                    publishTaskName, PublishTask::class.java, it
+                                )
+                            } catch (e: Exception) {
+                                PluginLogUtil.printlnErrorInScreen("$TAG register $publishTaskName error ${e.message} ")
+                            }
+                        }
+                    }
                 }
 
             }
         }
     }
-
-
 
 
     private fun <T : PublishInfoExtension> publishing(

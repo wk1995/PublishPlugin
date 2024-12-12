@@ -11,15 +11,10 @@ abstract class BasePublish {
      * */
     abstract fun queryVersion(): String?
 
-    /**
-     * 发布到本地
-     * */
-    abstract fun publishLocal(project: Project, publishInfo: PublishInfoExtension)
 
-    /**
-     * 发布到云端
-     * */
-    abstract fun publishRemote(project: Project, publishInfo: PublishInfoExtension)
+    abstract fun publish(project: Project, publishInfo: PublishInfoExtension)
+
+    abstract fun getPublishTaskName():String
 
     /**
      * 修改信息
