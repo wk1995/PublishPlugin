@@ -1,12 +1,11 @@
 package custom.android.plugin
 
+import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import custom.android.plugin.PublishTask.Companion.MAVEN_PUBLICATION_NAME
 import custom.android.plugin.base.ModuleType
 import custom.android.plugin.log.PluginLogUtil
-import custom.android.plugin.publish.BasePublish
 import custom.android.plugin.publish.app.fir.im.FirImPublishLocalApp
-import custom.android.plugin.publish.app.fir.im.FirImPublishRemoteApp
 import custom.android.plugin.publish.library.MavenPublishLocalLibrary
 import custom.android.plugin.publish.library.MavenPublishRemoteLibrary
 import custom.android.plugin.publish.plugin.MavenPublishLocalPlugin
@@ -27,6 +26,7 @@ import java.util.Properties
 open class PublishOperate {
     companion object {
         private const val TAG = "PublishOperate"
+        private const val ASSEMBLE="assemble"
     }
 
     private val properties by lazy {
@@ -42,23 +42,34 @@ open class PublishOperate {
             PluginLogUtil.printlnDebugInScreen("$TAG is app")
             val currProjectName = project.displayName
             PluginLogUtil.printlnDebugInScreen("$TAG currProjectName $currProjectName")
-            project.gradle.afterProject {
-                PluginLogUtil.printlnDebugInScreen("$TAG currProject.displayName $displayName")
-                if (currProjectName == displayName) {
-                    PluginLogUtil.printlnDebugInScreen("$TAG $currProjectName start register ")
-                    listOf(
-                        FirImPublishLocalApp(), FirImPublishRemoteApp()
-                    ).forEach {
-                        val publishTaskName = it.getPublishTaskName()
-                        try {
-                            project.tasks.register(
-                                publishTaskName, PublishTask::class.java, it
-                            )
-                        } catch (e: Exception) {
-                            PluginLogUtil.printlnErrorInScreen("$TAG register $publishTaskName error ${e.message} ")
+            val android = project.extensions.findByName("android") as? AppExtension
+            project.afterEvaluate {
+                PluginLogUtil.printlnDebugInScreen("$TAG  android?.applicationVariants ${android?.applicationVariants}")
+                // 遍历所有变种
+                android?.applicationVariants?.all { variant ->
+                    val publishTaskName = "生成本地包：${variant.name}"
+                    val localPublish = object : FirImPublishLocalApp() {
+                        override fun getPublishTaskName(): String {
+                            return publishTaskName
+                        }
+
+                        override fun publishLocal(
+                            project: Project, publishInfo: PublishInfoExtension
+                        ) {
+                            super.publishLocal(project, publishInfo)
                         }
                     }
-
+                    project.tasks.register(
+                        publishTaskName, PublishTask::class.java, localPublish
+                    )
+                    println("Variant name: ${variant.name}")
+                    println("Build type: ${variant.buildType.name}")
+                    println("Flavor: ${variant.flavorName}")
+                    variant.outputs.forEach {
+                        val apkFile = it.outputFile
+                        println("Output APK: file://${apkFile.parent}")
+                    }
+                    true
                 }
             }
             return
