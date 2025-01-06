@@ -7,7 +7,14 @@ plugins {
 android {
     namespace = "cn.entertech.entertech.plugin"
     compileSdk = 34
-
+    signingConfigs {
+        create("signing") {
+            keyAlias = "demo"
+            keyPassword = "123456"
+            storeFile = file("../demo")
+            storePassword = "123456"
+        }
+    }
     defaultConfig {
         applicationId = "cn.entertech.entertech.plugin"
         minSdk = 24
@@ -50,23 +57,20 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
 
         create("other") {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
         debug {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
 
