@@ -2,6 +2,7 @@ package custom.android.plugin
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.api.ApplicationVariant
 import custom.android.plugin.PublishTask.Companion.MAVEN_PUBLICATION_NAME
 import custom.android.plugin.base.ModuleType
 import custom.android.plugin.log.PluginLogUtil
@@ -18,8 +19,10 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.get
+import org.gradle.platform.base.Variant
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.SigningExtension
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URI
 import java.util.Properties
@@ -28,7 +31,7 @@ import java.util.Properties
 open class PublishOperate {
     companion object {
         private const val TAG = "PublishOperate"
-        private const val ASSEMBLE="assemble"
+        private const val ASSEMBLE = "assemble"
     }
 
     private val properties by lazy {
@@ -46,7 +49,6 @@ open class PublishOperate {
             PluginLogUtil.printlnDebugInScreen("$TAG currProjectName $currProjectName")
             val android = project.extensions.findByName("android") as? AppExtension
             project.afterEvaluate {
-                PluginLogUtil.printlnDebugInScreen("$TAG  android?.applicationVariants ${android?.applicationVariants}")
                 // 遍历所有变种
                 android?.applicationVariants?.all { variant ->
                     val publishTaskName = "生成本地包：${variant.name}"
@@ -59,25 +61,20 @@ open class PublishOperate {
                             project: Project, publishInfo: PublishInfoExtension
                         ) {
                             super.publishLocal(project, publishInfo)
-                            val path = "${project.rootDir}${File.separator}${gradlewFileName()}"
-                            project.exec {
-                                setCommandLine(
-                                    path, "assemble${variant.name}"
-                                )
-                            }
+                            assemble(project, gradlewFileName(), variant)
                         }
                     }
-                    val remotePublishTaskName="上传包：${variant.name}"
-                    val remotePublish=object:FirImPublishRemoteApp(){
+                    val remotePublishTaskName = "上传包：${variant.name}"
+                    val remotePublish = object : FirImPublishRemoteApp() {
                         override fun getPublishTaskName(): String {
                             return remotePublishTaskName
                         }
 
                         override fun publishRemote(
-                            project: Project,
-                            publishInfo: PublishInfoExtension
+                            project: Project, publishInfo: PublishInfoExtension
                         ) {
                             super.publishRemote(project, publishInfo)
+                            assemble(project, gradlewFileName(), variant)
                         }
                     }
                     project.tasks.register(
@@ -86,14 +83,6 @@ open class PublishOperate {
                     project.tasks.register(
                         remotePublishTaskName, PublishTask::class.java, remotePublish
                     )
-
-                  /*  println("Variant name: ${variant.name}")
-                    println("Build type: ${variant.buildType.name}")
-                    println("Flavor: ${variant.flavorName}")
-                    variant.outputs.forEach {
-                        val apkFile = it.outputFile
-                        println("Output APK: file://${apkFile.parent}")
-                    }*/
                     true
                 }
             }
@@ -178,6 +167,25 @@ open class PublishOperate {
         }
     }
 
+    private fun assemble(project: Project, gradlewFileName: String, variant: ApplicationVariant) {
+        val path = "${project.rootDir}${File.separator}$gradlewFileName"
+        val out = ByteArrayOutputStream()
+        project.exec {
+            standardOutput = out
+            setCommandLine(
+                path, "assemble${variant.name}"
+            )
+        }
+        val result = out.toString()
+        PluginLogUtil.printlnDebugInScreen("==================================================================")
+        PluginLogUtil.printlnDebugInScreen("打包 结果   :   $result")
+        PluginLogUtil.printlnDebugInScreen("==================================================================")
+        variant.outputs.forEach {
+            val apkFile = it.outputFile
+            PluginLogUtil.printlnInfoInScreen("Output APK: ${apkFile.parent}")
+            //上传包
+        }
+    }
 
     private fun <T : PublishInfoExtension> publishing(
         project: Project,

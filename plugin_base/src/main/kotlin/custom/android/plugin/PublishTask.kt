@@ -17,7 +17,7 @@ open class PublishTask @Inject constructor(@get:Input protected val publish: Bas
 
     init {
         group = "customPlugin"
-        PluginLogUtil.printlnDebugInScreen("publish: $publish")
+        PluginLogUtil.printlnDebugInScreen("publish: ${publish.getPublishTaskName()}")
     }
 
 
