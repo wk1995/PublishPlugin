@@ -20,6 +20,7 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.SigningExtension
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URI
 import java.util.Properties
@@ -60,11 +61,17 @@ open class PublishOperate {
                         ) {
                             super.publishLocal(project, publishInfo)
                             val path = "${project.rootDir}${File.separator}${gradlewFileName()}"
+                            val out = ByteArrayOutputStream()
                             project.exec {
+                                standardOutput = out
                                 setCommandLine(
                                     path, "assemble${variant.name}"
                                 )
                             }
+                            val result = out.toString()
+                            PluginLogUtil.printlnInfoInScreen("==================================================================")
+                            PluginLogUtil.printlnDebugInScreen("打包 结果   :   $result")
+                            PluginLogUtil.printlnInfoInScreen("==================================================================")
                         }
                     }
                     val remotePublishTaskName="上传包：${variant.name}"

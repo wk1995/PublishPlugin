@@ -2,10 +2,11 @@ package custom.android.plugin.publish.app.fir.im
 
 import com.android.build.gradle.api.ApplicationVariant
 import custom.android.plugin.PublishInfoExtension
+import custom.android.plugin.log.PluginLogUtil
 import custom.android.plugin.publish.BaseRemotePublish
 import org.gradle.api.Project
 import java.io.ByteArrayOutputStream
-
+//a503cf1a61e7b6afa43234e80fc201f6
 open class FirImPublishRemoteApp : BaseRemotePublish() {
 
     companion object {
@@ -27,7 +28,7 @@ open class FirImPublishRemoteApp : BaseRemotePublish() {
         println("Flavor: ${variant.flavorName}")
         variant.outputs.forEach {
             val apkFile=it.outputFile
-            println("Output APK: file://${apkFile.parent}")
+            PluginLogUtil.printlnInfoInScreen("Output APK: file://${apkFile.parent}")
         }
     }
 
