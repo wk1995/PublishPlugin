@@ -21,13 +21,13 @@ open class FirImPublishLocalApp : BaseLocalPublish() {
     }
 
     override fun publishLocal(project: Project, publishInfo: PublishInfoExtension) {
-        val android = project.extensions.findByName("android") as? AppExtension
+    /*    val android = project.extensions.findByName("android") as? AppExtension
         // 遍历所有变种
         android?.applicationVariants?.all{
             variant ->
             handleVariant(project, variant)
             true
-        }
+        }*/
 
        /* val realTaskName = ":"
         val out = ByteArrayOutputStream()

@@ -6,6 +6,7 @@ import custom.android.plugin.PublishTask.Companion.MAVEN_PUBLICATION_NAME
 import custom.android.plugin.base.ModuleType
 import custom.android.plugin.log.PluginLogUtil
 import custom.android.plugin.publish.app.fir.im.FirImPublishLocalApp
+import custom.android.plugin.publish.app.fir.im.FirImPublishRemoteApp
 import custom.android.plugin.publish.library.MavenPublishLocalLibrary
 import custom.android.plugin.publish.library.MavenPublishRemoteLibrary
 import custom.android.plugin.publish.plugin.MavenPublishLocalPlugin
@@ -19,6 +20,7 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.SigningExtension
+import java.io.File
 import java.net.URI
 import java.util.Properties
 
@@ -57,18 +59,41 @@ open class PublishOperate {
                             project: Project, publishInfo: PublishInfoExtension
                         ) {
                             super.publishLocal(project, publishInfo)
+                            val path = "${project.rootDir}${File.separator}${gradlewFileName()}"
+                            project.exec {
+                                setCommandLine(
+                                    path, "assemble${variant.name}"
+                                )
+                            }
+                        }
+                    }
+                    val remotePublishTaskName="上传包：${variant.name}"
+                    val remotePublish=object:FirImPublishRemoteApp(){
+                        override fun getPublishTaskName(): String {
+                            return remotePublishTaskName
+                        }
+
+                        override fun publishRemote(
+                            project: Project,
+                            publishInfo: PublishInfoExtension
+                        ) {
+                            super.publishRemote(project, publishInfo)
                         }
                     }
                     project.tasks.register(
                         publishTaskName, PublishTask::class.java, localPublish
                     )
-                    println("Variant name: ${variant.name}")
+                    project.tasks.register(
+                        remotePublishTaskName, PublishTask::class.java, remotePublish
+                    )
+
+                  /*  println("Variant name: ${variant.name}")
                     println("Build type: ${variant.buildType.name}")
                     println("Flavor: ${variant.flavorName}")
                     variant.outputs.forEach {
                         val apkFile = it.outputFile
                         println("Output APK: file://${apkFile.parent}")
-                    }
+                    }*/
                     true
                 }
             }
