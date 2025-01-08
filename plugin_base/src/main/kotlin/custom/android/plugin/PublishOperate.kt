@@ -19,12 +19,13 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.get
-import org.gradle.platform.base.Variant
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.SigningExtension
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.net.HttpURLConnection
 import java.net.URI
+import java.net.URL
 import java.util.Properties
 
 
@@ -74,7 +75,7 @@ open class PublishOperate {
                             project: Project, publishInfo: PublishInfoExtension
                         ) {
                             super.publishRemote(project, publishInfo)
-                            assemble(project, gradlewFileName(), variant)
+                            assemble(project, gradlewFileName(), variant, true)
                         }
                     }
                     project.tasks.register(
@@ -167,7 +168,12 @@ open class PublishOperate {
         }
     }
 
-    private fun assemble(project: Project, gradlewFileName: String, variant: ApplicationVariant) {
+    private fun assemble(
+        project: Project,
+        gradlewFileName: String,
+        variant: ApplicationVariant,
+        upload: Boolean = false
+    ) {
         val path = "${project.rootDir}${File.separator}$gradlewFileName"
         val out = ByteArrayOutputStream()
         project.exec {
@@ -180,10 +186,53 @@ open class PublishOperate {
         PluginLogUtil.printlnDebugInScreen("==================================================================")
         PluginLogUtil.printlnDebugInScreen("打包 结果   :   $result")
         PluginLogUtil.printlnDebugInScreen("==================================================================")
-        variant.outputs.forEach {
+        variant.outputs.forEach { it ->
             val apkFile = it.outputFile
             PluginLogUtil.printlnInfoInScreen("Output APK: ${apkFile.parent}")
             //上传包
+            if (upload) {
+
+                if (apkFile.exists()) {
+                    try {
+                        val applicationId = variant.applicationId
+                        // 请求 URL
+                        val url = URL("http://api.appmeta.cn/apps")
+
+                        // 请求体
+                        val jsonData = """
+            {
+                "type": "android",
+                "bundle_id": "com.entertech.tes.vr",
+                "api_token": "a503cf1a61e7b6afa43234e80fc201f6"
+            }
+        """.trimIndent()
+
+                        // 打开 HTTP 连接
+                        val connection = url.openConnection() as HttpURLConnection
+                        connection.requestMethod = "POST"
+                        connection.setRequestProperty("Content-Type", "application/json")
+                        connection.doOutput = true
+
+                        // 写入数据
+                        connection.outputStream.use { outputStream ->
+                            outputStream.write(jsonData.toByteArray(Charsets.UTF_8))
+                        }
+
+                        // 获取响应
+                        val responseCode = connection.responseCode
+                        println("Response Code: $responseCode")
+
+                        // 读取响应内容
+                        val response = connection.inputStream.bufferedReader().use { it.readText() }
+                        println("Response Body: $response")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                } else {
+                    PluginLogUtil.printlnErrorInScreen("包不存在 无法上传")
+                }
+            }
         }
     }
 

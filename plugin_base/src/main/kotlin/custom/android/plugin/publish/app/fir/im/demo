@@ -1,0 +1,39 @@
+{
+  "user_system_default_download_domain": "fir.xcxwo.com",
+  "id": "677e2b0c23389f7d27073940",
+  "type": "android",
+  "short": "uyfbp5ve",
+  "download_domain": "fir.entertech.cn",
+  "download_domain_https_ready": true,
+  "app_user_id": "57a15ca8959d693ba90001c5",
+  "storage": "qiniu",
+  "form_method": "POST",
+  "cert": {
+    "icon": {
+      "key": "6643363828143bbec8a7f9466b1ca47fc19ee813",
+      "token": "_Vr9k9CbrqN6dKAd18Ezner7W9yR86vNze9XcT9h:WFl7aFaJy-bg-NXqMkM6QzjptVo=:eyJzY29wZSI6ImZpcmljb246NjY0MzM2MzgyODE0M2JiZWM4YTdmOTQ2NmIxY2E0N2ZjMTllZTgxMyIsImNhbGxiYWNrVXJsIjoiaHR0cDovL2FwaS5hcHBtZXRhLmNuL2F1dGgvcWluaXUvY2FsbGJhY2s_cGFyZW50X2lkPTY3N2UyYjBjMjMzODlmN2QyNzA3Mzk0MFx1MDAyNnRpbWVzdGFtcD0xNzM2MzM3NDYyXHUwMDI2c2lnbj00N2YyNlx1MDAyNm9yaWdpbmFsX2tleT00MTdjM2I2NmNhYjQyYTM3ZGYxMzBkM2YyNjdjMWRiZjA2M2I4ZWFhIiwiY2FsbGJhY2tCb2R5Ijoia2V5PSQoa2V5KVx1MDAyNmV0YWc9JChldGFnKVx1MDAyNmZzaXplPSQoZnNpemUpXHUwMDI2Zm5hbWU9JChmbmFtZSlcdTAwMjZvcmlnaW49JCh4Om9yaWdpbilcdTAwMjZpc19jb252ZXJ0ZWQ9JCh4OmlzX2NvbnZlcnRlZCkiLCJkZWFkbGluZSI6MTczNjMzODA2MiwidXBob3N0cyI6WyJodHRwOi8vdXAucWluaXUuY29tIiwiaHR0cDovL3VwbG9hZC1jbi1lYXN0LTEucWluaXVpby5jb20iLCItSCB1cC5xaW5pdS5jb20gaHR0cDovLzExNS4yMzEuMjkuMTAiXSwiZ2xvYmFsIjpmYWxzZX0=",
+      "upload_url": "https://upload.qbox.me",
+      "custom_headers": {
+
+      },
+      "custom_callback_data": {
+        "original_key": "417c3b66cab42a37df130d3f267c1dbf063b8eaa"
+      }
+    },
+    "binary": {
+      "key": "dd2309b2a4da73546eb0055143f4c724010e49c9.apk",
+      "token": "_Vr9k9CbrqN6dKAd18Ezner7W9yR86vNze9XcT9h:huVdtA3TVHWDWNGuixG3z-azBGY=:eyJzY29wZSI6InByby1hcHA6ZGQyMzA5YjJhNGRhNzM1NDZlYjAwNTUxNDNmNGM3MjQwMTBlNDljOS5hcGsiLCJjYWxsYmFja1VybCI6Imh0dHA6Ly9hcGkuYXBwbWV0YS5jbi9hdXRoL3Fpbml1L2NhbGxiYWNrP3BhcmVudF9pZD02NzdlMmIwYzIzMzg5ZjdkMjcwNzM5NDBcdTAwMjZ0aW1lc3RhbXA9MTczNjMzNzQ2Mlx1MDAyNnNpZ249NDdmMjZcdTAwMjZ1c2VyX2lkPTU3YTE1Y2E4OTU5ZDY5M2JhOTAwMDFjNSIsImNhbGxiYWNrQm9keSI6ImtleT0kKGtleSlcdTAwMjZldGFnPSQoZXRhZylcdTAwMjZmc2l6ZT0kKGZzaXplKVx1MDAyNmZuYW1lPSQoZm5hbWUpXHUwMDI2b3JpZ2luPSQoeDpvcmlnaW4pXHUwMDI2bmFtZT0kKHg6bmFtZSlcdTAwMjZidWlsZD0kKHg6YnVpbGQpXHUwMDI2dmVyc2lvbj0kKHg6dmVyc2lvbilcdTAwMjZpc191c2VfbXFjPSQoeDppc191c2VfbXFjKVx1MDAyNmNoYW5nZWxvZz0kKHg6Y2hhbmdlbG9nKVx1MDAyNnJlbGVhc2VfdHlwZT0kKHg6cmVsZWFzZV90eXBlKVx1MDAyNmRpc3RyaWJ1dGlvbl9uYW1lPSQoeDpkaXN0cmlidXRpb25fbmFtZSlcdTAwMjZzdXBwb3J0ZWRfcGxhdGZvcm09JCh4OnN1cHBvcnRlZF9wbGF0Zm9ybSlcdTAwMjZtaW5pbXVtX29zX3ZlcnNpb249JCh4Om1pbmltdW1fb3NfdmVyc2lvbilcdTAwMjZ1aV9yZXF1aXJlZF9kZXZpY2VfY2FwYWJpbGl0aWVzPSQoeDp1aV9yZXF1aXJlZF9kZXZpY2VfY2FwYWJpbGl0aWVzKVx1MDAyNnVpX2RldmljZV9mYW1pbHk9JCh4OnVpX2RldmljZV9mYW1pbHkpIiwiZGVhZGxpbmUiOjE3MzYzNDEwNjIsInVwaG9zdHMiOlsiaHR0cDovL3VwLnFpbml1LmNvbSIsImh0dHA6Ly91cGxvYWQtY24tZWFzdC0xLnFpbml1aW8uY29tIiwiLUggdXAucWluaXUuY29tIGh0dHA6Ly8xMTUuMjMxLjI5LjEwIl0sImdsb2JhbCI6ZmFsc2V9",
+      "upload_url": "https://upload.qbox.me",
+      "custom_headers": {
+
+      }
+    },
+    "mqc": {
+      "total": 5,
+      "used": 0,
+      "is_mqc_availabled": true
+    },
+    "support": "qiniu",
+    "prefix": "x:"
+  }
+}
