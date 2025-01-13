@@ -9,6 +9,7 @@ dependencies {
     implementation(gradleApi())
     //groovy sdk
     implementation(localGroovy())
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10")
     implementation("com.android.tools.build:gradle:8.1.3")
 }
@@ -33,15 +34,14 @@ publishing {
             version = "1.1.0-local"
             from(components["java"])
         }
-    }
- /*   signing {
-        useInMemoryPgpKeys(
-            findProperty("signing.keyId") as String?,
-            findProperty("signing.secretKeyRingFile") as String?,
-            findProperty("signing.password") as String?
-        )
-        sign(publishing.publications["customPlugin"])
-    }*/
+    }/*   signing {
+           useInMemoryPgpKeys(
+               findProperty("signing.keyId") as String?,
+               findProperty("signing.secretKeyRingFile") as String?,
+               findProperty("signing.password") as String?
+           )
+           sign(publishing.publications["customPlugin"])
+       }*/
 
     repositories {
         maven {

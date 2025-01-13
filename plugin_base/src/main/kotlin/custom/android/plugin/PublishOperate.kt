@@ -8,10 +8,12 @@ import custom.android.plugin.base.ModuleType
 import custom.android.plugin.log.PluginLogUtil
 import custom.android.plugin.publish.app.fir.im.FirImPublishLocalApp
 import custom.android.plugin.publish.app.fir.im.FirImPublishRemoteApp
+import custom.android.plugin.publish.app.fir.im.upload.UploadCredentialsResponse
 import custom.android.plugin.publish.library.MavenPublishLocalLibrary
 import custom.android.plugin.publish.library.MavenPublishRemoteLibrary
 import custom.android.plugin.publish.plugin.MavenPublishLocalPlugin
 import custom.android.plugin.publish.plugin.MavenPublishRemotePlugin
+import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponent
 import org.gradle.api.publish.PublishingExtension
@@ -21,8 +23,13 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.get
 import org.gradle.plugin.devel.GradlePluginDevelopmentExtension
 import org.gradle.plugins.signing.SigningExtension
+import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -186,6 +193,11 @@ open class PublishOperate {
         PluginLogUtil.printlnDebugInScreen("==================================================================")
         PluginLogUtil.printlnDebugInScreen("打包 结果   :   $result")
         PluginLogUtil.printlnDebugInScreen("==================================================================")
+        val applicationId = variant.applicationId
+        val appName = variant.name
+        val appVersion = variant.versionName
+        val appBuild = variant.versionCode
+        PluginLogUtil.printlnInfoInScreen("applicationId: $applicationId appName: $appName appVersion: $appVersion appBuild: $appBuild")
         variant.outputs.forEach { it ->
             val apkFile = it.outputFile
             PluginLogUtil.printlnInfoInScreen("Output APK: ${apkFile.parent}")
@@ -194,7 +206,6 @@ open class PublishOperate {
 
                 if (apkFile.exists()) {
                     try {
-                        val applicationId = variant.applicationId
                         // 请求 URL
                         val url = URL("http://api.appmeta.cn/apps")
 
@@ -202,29 +213,36 @@ open class PublishOperate {
                         val jsonData = """
             {
                 "type": "android",
-                "bundle_id": "com.entertech.tes.vr",
+                "bundle_id": "$applicationId",
                 "api_token": "a503cf1a61e7b6afa43234e80fc201f6"
             }
         """.trimIndent()
-
+                        PluginLogUtil.printlnDebugInScreen("jsonData: $jsonData")
                         // 打开 HTTP 连接
-                        val connection = url.openConnection() as HttpURLConnection
-                        connection.requestMethod = "POST"
-                        connection.setRequestProperty("Content-Type", "application/json")
-                        connection.doOutput = true
+                        val connection = url.openConnection() as? HttpURLConnection
+                        connection?.requestMethod = "POST"
+                        connection?.setRequestProperty("Content-Type", "application/json")
+                        connection?.doOutput = true
 
                         // 写入数据
-                        connection.outputStream.use { outputStream ->
-                            outputStream.write(jsonData.toByteArray(Charsets.UTF_8))
+                        connection?.outputStream.use { outputStream ->
+                            outputStream?.write(jsonData.toByteArray(Charsets.UTF_8))
                         }
 
                         // 获取响应
-                        val responseCode = connection.responseCode
+                        val responseCode = connection?.responseCode
                         println("Response Code: $responseCode")
 
                         // 读取响应内容
-                        val response = connection.inputStream.bufferedReader().use { it.readText() }
-                        println("Response Body: $response")
+                        val response =
+                            connection?.inputStream?.bufferedReader().use { it?.readText() } ?: ""
+                        PluginLogUtil.printlnDebugInScreen("Response Body: $response")
+                        val json = Json { prettyPrint = true }
+                        val uploadCredentialsResponse =
+                            json.decodeFromString<UploadCredentialsResponse>(response)
+                        val appKey = uploadCredentialsResponse.cert.binary.key
+                        val appToken = uploadCredentialsResponse.cert.binary.token
+                        val appUploadUrl = uploadCredentialsResponse.cert.binary.upload_url
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -235,6 +253,94 @@ open class PublishOperate {
             }
         }
     }
+
+
+    fun uploadFile(key: String, token: String) {
+        val boundary = "----WebKitFormBoundary" + System.currentTimeMillis()
+        val lineEnd = "\r\n"
+
+        try {
+            val url = URL("https://up.qbox.me")
+            val connection = url.openConnection() as? HttpURLConnection
+            connection?.doOutput = true
+            connection?.requestMethod = "POST"
+            connection?.setRequestProperty(
+                "Content-Type", "multipart/form-data; boundary=$boundary"
+            )
+
+            val outputStream = DataOutputStream(connection?.outputStream)
+
+            // Add form fields
+            addFormField(outputStream, boundary, "key", key)
+            addFormField(outputStream, boundary, "token", token)
+            addFormField(outputStream, boundary, "x:name", "aaaa")
+            addFormField(outputStream, boundary, "x:version", "a.b.c")
+            addFormField(outputStream, boundary, "x:build", "1")
+//            addFormField(outputStream, boundary, "x:release_type", "Adhoc")
+            addFormField(outputStream, boundary, "x:changelog", "first")
+
+            // Add file
+            addFilePart(outputStream, boundary, "file", File("/path/to/aa.apk"))
+
+            // End of multipart/form-data
+            outputStream.writeBytes("--$boundary--$lineEnd")
+            outputStream.flush()
+            outputStream.close()
+
+            // Get response
+            val responseCode = connection?.responseCode
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                val reader = BufferedReader(InputStreamReader(connection.inputStream))
+                val response = StringBuilder()
+                var line: String?
+                while ((reader.readLine().also { line = it }) != null) {
+                    response.append(line)
+                }
+                reader.close()
+                PluginLogUtil.printlnDebugInScreen("Upload successful: $response")
+            } else {
+                PluginLogUtil.printlnDebugInScreen("Upload failed: HTTP error code $responseCode")
+            }
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun addFormField(
+        outputStream: DataOutputStream, boundary: String, name: String, value: String
+    ) {
+        val lineEnd = "\r\n"
+        val twoHyphens = "--"
+        outputStream.writeBytes(twoHyphens + boundary + lineEnd)
+        outputStream.writeBytes("Content-Disposition: form-data; name=\"$name\"$lineEnd")
+        outputStream.writeBytes(lineEnd)
+        outputStream.writeBytes(value + lineEnd)
+    }
+
+    @Throws(IOException::class)
+    private fun addFilePart(
+        outputStream: DataOutputStream, boundary: String, fieldName: String, file: File
+    ) {
+        val lineEnd = "\r\n"
+        val twoHyphens = "--"
+        val fileName = file.name
+
+        outputStream.writeBytes(twoHyphens + boundary + lineEnd)
+        outputStream.writeBytes("Content-Disposition: form-data; name=\"$fieldName\"; filename=\"$fileName\"$lineEnd")
+        outputStream.writeBytes("Content-Type: application/vnd.android.package-archive$lineEnd")
+        outputStream.writeBytes(lineEnd)
+
+        val fileInputStream = FileInputStream(file)
+        val buffer = ByteArray(1024)
+        var bytesRead: Int
+        while ((fileInputStream.read(buffer).also { bytesRead = it }) != -1) {
+            outputStream.write(buffer, 0, bytesRead)
+        }
+        fileInputStream.close()
+        outputStream.writeBytes(lineEnd)
+    }
+
 
     private fun <T : PublishInfoExtension> publishing(
         project: Project,

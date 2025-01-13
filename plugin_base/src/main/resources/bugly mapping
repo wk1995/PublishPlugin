@@ -1,1 +1,1 @@
-java -jar buglyqq-upload-symbol.jar -appid 297afa9ead -appkey bbde3042-1fb2-4f76-9f1b-7fcc78dc1b02  -version 5.0.4 -buildNo 5041 -platform Android -inputMapping /Users/chengpeng/wk/Enter-Flowtime-Android/app/build/outputs/mapping/ApiComFlowtimeRelease/mapping.txt
+java -jar buglyqq-upload-symbol.jar -appid 297afa9ead -appkey bbde3042-1fb2-4f76-9f1b-7fcc78dc1b02  -version 5.0.6 -buildNo 5061 -platform Android -inputMapping /Users/chengpeng/wk/Enter-Flowtime-Android/app/build/outputs/mapping/ApiComFlowtimeRelease/mapping.txt
