@@ -1,6 +1,7 @@
 plugins {
     `kotlin-dsl`
     id("maven-publish")
+    kotlin("plugin.serialization") version "1.8.10"
 //    id("signing")
 }
 

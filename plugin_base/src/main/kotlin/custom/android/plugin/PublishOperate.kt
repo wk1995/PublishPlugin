@@ -9,6 +9,8 @@ import custom.android.plugin.log.PluginLogUtil
 import custom.android.plugin.publish.app.fir.im.FirImPublishLocalApp
 import custom.android.plugin.publish.app.fir.im.FirImPublishRemoteApp
 import custom.android.plugin.publish.app.fir.im.upload.UploadCredentialsResponse
+import custom.android.plugin.publish.app.net.HttpUtil
+import custom.android.plugin.publish.app.net.RequestMethodType
 import custom.android.plugin.publish.library.MavenPublishLocalLibrary
 import custom.android.plugin.publish.library.MavenPublishRemoteLibrary
 import custom.android.plugin.publish.plugin.MavenPublishLocalPlugin
@@ -203,12 +205,8 @@ open class PublishOperate {
             PluginLogUtil.printlnInfoInScreen("Output APK: ${apkFile.parent}")
             //上传包
             if (upload) {
-
                 if (apkFile.exists()) {
                     try {
-                        // 请求 URL
-                        val url = URL("http://api.appmeta.cn/apps")
-
                         // 请求体
                         val jsonData = """
             {
@@ -218,31 +216,32 @@ open class PublishOperate {
             }
         """.trimIndent()
                         PluginLogUtil.printlnDebugInScreen("jsonData: $jsonData")
-                        // 打开 HTTP 连接
-                        val connection = url.openConnection() as? HttpURLConnection
-                        connection?.requestMethod = "POST"
-                        connection?.setRequestProperty("Content-Type", "application/json")
-                        connection?.doOutput = true
-
-                        // 写入数据
-                        connection?.outputStream.use { outputStream ->
-                            outputStream?.write(jsonData.toByteArray(Charsets.UTF_8))
-                        }
-
-                        // 获取响应
-                        val responseCode = connection?.responseCode
-                        println("Response Code: $responseCode")
-
-                        // 读取响应内容
-                        val response =
-                            connection?.inputStream?.bufferedReader().use { it?.readText() } ?: ""
+                        val headers = mapOf("Content-Type" to "application/json")
+                        val response = HttpUtil.sendHttpRequest(
+                            "http://api.appmeta.cn/apps",
+                            RequestMethodType.POST,
+                            headers = headers,
+                            body = jsonData
+                        )
                         PluginLogUtil.printlnDebugInScreen("Response Body: $response")
-                        val json = Json { prettyPrint = true }
+                        val json = Json {
+//                            prettyPrint = true//序列化输出的 JSON 更加美观和可读
+                            ignoreUnknownKeys = true //忽略 JSON 中未知的字段
+                        }
                         val uploadCredentialsResponse =
                             json.decodeFromString<UploadCredentialsResponse>(response)
                         val appKey = uploadCredentialsResponse.cert.binary.key
                         val appToken = uploadCredentialsResponse.cert.binary.token
                         val appUploadUrl = uploadCredentialsResponse.cert.binary.upload_url
+                        uploadFile(
+                            apkFile,
+                            appUploadUrl,
+                            appKey,
+                            appToken,
+                            appName,
+                            appVersion,
+                            appBuild.toString()
+                        )
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -255,12 +254,20 @@ open class PublishOperate {
     }
 
 
-    fun uploadFile(key: String, token: String) {
+    private fun uploadFile(
+        apkFile: File,
+        uploadUrl: String,
+        key: String,
+        token: String,
+        appName: String,
+        appVersion: String,
+        appBuildCode: String
+    ) {
         val boundary = "----WebKitFormBoundary" + System.currentTimeMillis()
         val lineEnd = "\r\n"
 
         try {
-            val url = URL("https://up.qbox.me")
+            val url = URL(uploadUrl)
             val connection = url.openConnection() as? HttpURLConnection
             connection?.doOutput = true
             connection?.requestMethod = "POST"
@@ -273,14 +280,14 @@ open class PublishOperate {
             // Add form fields
             addFormField(outputStream, boundary, "key", key)
             addFormField(outputStream, boundary, "token", token)
-            addFormField(outputStream, boundary, "x:name", "aaaa")
-            addFormField(outputStream, boundary, "x:version", "a.b.c")
-            addFormField(outputStream, boundary, "x:build", "1")
+            addFormField(outputStream, boundary, "x:name", appName)
+            addFormField(outputStream, boundary, "x:version", appVersion)
+            addFormField(outputStream, boundary, "x:build", appBuildCode)
 //            addFormField(outputStream, boundary, "x:release_type", "Adhoc")
             addFormField(outputStream, boundary, "x:changelog", "first")
 
             // Add file
-            addFilePart(outputStream, boundary, "file", File("/path/to/aa.apk"))
+            addFilePart(outputStream, boundary, "file", apkFile)
 
             // End of multipart/form-data
             outputStream.writeBytes("--$boundary--$lineEnd")
